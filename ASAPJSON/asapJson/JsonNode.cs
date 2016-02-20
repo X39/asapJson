@@ -33,7 +33,7 @@ namespace asapJson
 {
     public class JsonNode
     {
-        public enum Type
+        public enum TypeEnum
         {
             Array,
             String,
@@ -41,28 +41,28 @@ namespace asapJson
             Object,
             Boolean
         }
-        private Type type;
+        public TypeEnum Type { get; internal set; }
         private object value;
         public JsonNode()
         {
-            type = Type.Object;
+            Type = TypeEnum.Object;
             value = null;
         }
         public JsonNode(Dictionary<string, JsonNode> input)
         {
-            type = Type.Object;
+            Type = TypeEnum.Object;
             value = (object)input;
         }
         public JsonNode(List<JsonNode> input)
         {
-            type = Type.Array;
+            Type = TypeEnum.Array;
             value = (object)input;
         }
         public JsonNode(string input, bool isJson = false)
         {
             if (isJson)
             {
-                type = Type.Object;
+                Type = TypeEnum.Object;
                 value = null;
                 System.IO.MemoryStream memStream = new System.IO.MemoryStream();
                 System.IO.StreamWriter sw = new System.IO.StreamWriter(memStream);
@@ -74,23 +74,23 @@ namespace asapJson
             }
             else
             {
-                type = Type.String;
+                Type = TypeEnum.String;
                 value = (object)input;
             }
         }
         public JsonNode(double input)
         {
-            type = Type.Number;
+            Type = TypeEnum.Number;
             value = (object)input;
         }
         public JsonNode(bool input)
         {
-            type = Type.Boolean;
+            Type = TypeEnum.Boolean;
             value = (object)input;
         }
         public JsonNode(System.IO.StreamReader input)
         {
-            type = Type.Object;
+            Type = TypeEnum.Object;
             value = null;
             read(input);
         }
@@ -103,11 +103,11 @@ namespace asapJson
             {
                 if (string.IsNullOrEmpty(next))
                     continue;
-                if (curNode.getType() == Type.Object)
+                if (curNode.Type == TypeEnum.Object)
                 {
                     Dictionary<string, JsonNode> val;
                     curNode.getValue(out val);
-                    if(val == null)
+                    if (val == null)
                     {
                         val = new Dictionary<string, JsonNode>();
                         curNode.setValue(val);
@@ -136,7 +136,7 @@ namespace asapJson
         {
             int index = path.LastIndexOf(delimeter);
             JsonNode lastNode;
-            if(index > 0)
+            if (index > 0)
             {
                 lastNode = getByPath(path.Substring(0, index), delimeter, true); ;
             }
@@ -145,7 +145,7 @@ namespace asapJson
                 lastNode = this;
             }
 
-            if (lastNode.getType() == Type.Object)
+            if (lastNode.Type == TypeEnum.Object)
             {
                 Dictionary<string, JsonNode> val;
                 lastNode.getValue(out val);
@@ -169,42 +169,37 @@ namespace asapJson
             }
         }
 
-        public Type getType()
-        {
-            return this.type;
-        }
-
         public void getValue(out List<JsonNode> val)
         {
-            if (this.type == Type.Array)
+            if (this.Type == TypeEnum.Array)
                 val = (List<JsonNode>)this.value;
             else
                 throw new TypeAccessException("JsonNode type != Type.Array");
         }
         public void getValue(out string val)
         {
-            if (this.type == Type.String)
+            if (this.Type == TypeEnum.String)
                 val = (string)this.value;
             else
                 throw new TypeAccessException("JsonNode type != Type.String");
         }
         public void getValue(out double val)
         {
-            if (this.type == Type.Number)
+            if (this.Type == TypeEnum.Number)
                 val = (double)this.value;
             else
                 throw new TypeAccessException("JsonNode type != Type.Number");
         }
         public void getValue(out Dictionary<string, JsonNode> val)
         {
-            if (this.type == Type.Object)
+            if (this.Type == TypeEnum.Object)
                 val = this.value == null ? null : (Dictionary<string, JsonNode>)this.value;
             else
                 throw new TypeAccessException("JsonNode type != Type.Object");
         }
         public void getValue(out bool val)
         {
-            if (this.type == Type.Boolean)
+            if (this.Type == TypeEnum.Boolean)
                 val = (bool)this.value;
             else
                 throw new TypeAccessException("JsonNode type != Type.Boolean");
@@ -213,32 +208,32 @@ namespace asapJson
         public void setValue(List<JsonNode> val)
         {
             this.value = (object)val;
-            this.type = Type.Array;
+            this.Type = TypeEnum.Array;
         }
         public void setValue(string val)
         {
             this.value = (object)val;
-            this.type = Type.String;
+            this.Type = TypeEnum.String;
         }
         public void setValue(double val)
         {
             this.value = (object)val;
-            this.type = Type.Number;
+            this.Type = TypeEnum.Number;
         }
         public void setValue(Dictionary<string, JsonNode> val)
         {
             this.value = (object)val;
-            this.type = Type.Object;
+            this.Type = TypeEnum.Object;
         }
         public void setValue(bool val)
         {
             this.value = (object)val;
-            this.type = Type.Boolean;
+            this.Type = TypeEnum.Boolean;
         }
         public void setValue()
         {
             this.value = null;
-            this.type = Type.Object;
+            this.Type = TypeEnum.Object;
         }
 
         #region Reading
@@ -257,7 +252,8 @@ namespace asapJson
             {
                 default:
                     throw new Exception("Unexpected character '" + sr.Peek() + '\'');
-                case 'n': case 'N':
+                case 'n':
+                case 'N':
                     sr.Read();
                     int next = sr.Read();
                     if (next != 'u' && next != 'U')
@@ -279,10 +275,23 @@ namespace asapJson
                 case '"':
                     readString(sr);
                     break;
-                case '-':  case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
+                case '-':
+                case '0':
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
                     readNumber(sr);
                     break;
-                case 't': case 'f': case 'T': case 'F':
+                case 't':
+                case 'f':
+                case 'T':
+                case 'F':
                     readBoolean(sr);
                     break;
             }
@@ -363,7 +372,7 @@ namespace asapJson
                 c = (i = sr.Read()) > 0 ? (char)c : '\0';
                 lastChar = c;
             }
-            if(lastChar != '}')
+            if (lastChar != '}')
                 throw new Exception("Parsing Object failed: Expected '}', got '" + lastChar + '\'');
         }
         private void readArray(System.IO.StreamReader sr)
@@ -433,7 +442,7 @@ namespace asapJson
             while ((i = sr.Peek()) >= 0)
             {
                 char c = (char)i;
-                if(escape)
+                if (escape)
                 {
                     switch (c)
                     {
@@ -465,11 +474,11 @@ namespace asapJson
                 }
                 else
                 {
-                    if(c == '\\')
+                    if (c == '\\')
                     {
                         escape = true;
                     }
-                    else if(c == '"')
+                    else if (c == '"')
                     {
                         c = (char)sr.Read();
                         lastChar = c;
@@ -483,7 +492,7 @@ namespace asapJson
                 c = (char)sr.Read();
                 lastChar = c;
             }
-            if(lastChar != '"')
+            if (lastChar != '"')
                 throw new Exception("Parsing Object failed: Expected '\"', got '" + lastChar + '\'');
             return sb.ToString();
         }
@@ -494,22 +503,22 @@ namespace asapJson
             if (sr.Peek() == '-')
                 sb.Append('-');
             bool isFrontNumber = true;
-            while((i = sr.Peek()) >= 0)
+            while ((i = sr.Peek()) >= 0)
             {
                 char c = (char)i;
-                if(isFrontNumber)
+                if (isFrontNumber)
                 {
-                    if(c == '0' && sb.Length == 0)
+                    if (c == '0' && sb.Length == 0)
                     {
                         sb.Append(c);
                         sb.Append('.');
                         isFrontNumber = false;
                     }
-                    else if(c >= '0' && c <= '9')
+                    else if (c >= '0' && c <= '9')
                     {
                         sb.Append(c);
                     }
-                    else if(c == '.')
+                    else if (c == '.')
                     {
                         sb.Append(c);
                         isFrontNumber = false;
@@ -525,7 +534,7 @@ namespace asapJson
                     {
                         sb.Append(c);
                     }
-                    else if(c == 'e' || c == 'E' || c == '+' || c == '-')
+                    else if (c == 'e' || c == 'E' || c == '+' || c == '-')
                     {
                         throw new Exception("Parsing Object failed: Expected DIGIT, got '" + c + "', Note: ASAP-JSON is not able to parse eg. 0.1234e10");
                     }
@@ -555,7 +564,7 @@ namespace asapJson
                     throw new Exception("Parsing Object failed: Expected 'e' or 'E', got '" + (char)i + '\'');
                 this.setValue(true);
             }
-            else if(i == 'f' | i == 'F')
+            else if (i == 'f' | i == 'F')
             {
                 sr.Read();
                 i = sr.Read();
@@ -577,15 +586,15 @@ namespace asapJson
 
         public void print(System.IO.StreamWriter sw)
         {
-            switch(this.type)
+            switch (this.Type)
             {
-                case Type.Array:
+                case TypeEnum.Array:
                     {
                         List<JsonNode> obj;
                         bool flag = false;
                         this.getValue(out obj);
                         sw.Write('[');
-                        foreach(var it in obj)
+                        foreach (var it in obj)
                         {
                             if (flag)
                                 sw.Write(',');
@@ -596,21 +605,21 @@ namespace asapJson
                         sw.Write(']');
                     }
                     break;
-                case Type.Boolean:
+                case TypeEnum.Boolean:
                     {
                         bool obj;
                         this.getValue(out obj);
                         sw.Write(obj ? "true" : "false");
                     }
                     break;
-                case Type.Number:
+                case TypeEnum.Number:
                     {
                         double obj;
                         this.getValue(out obj);
                         sw.Write(obj.ToString(System.Globalization.CultureInfo.InvariantCulture));
                     }
                     break;
-                case Type.Object:
+                case TypeEnum.Object:
                     {
                         Dictionary<string, JsonNode> obj;
                         bool flag = false;
@@ -638,15 +647,15 @@ namespace asapJson
                         }
                     }
                     break;
-                case Type.String:
+                case TypeEnum.String:
                     {
                         string obj;
                         this.getValue(out obj);
                         sw.Write('"');
                         var sb = new StringBuilder();
-                        foreach(var it in obj)
+                        foreach (var it in obj)
                         {
-                            switch(it)
+                            switch (it)
                             {
                                 default:
                                     sb.Append(it);
