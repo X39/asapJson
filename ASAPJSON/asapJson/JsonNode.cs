@@ -169,38 +169,104 @@ namespace asapJson
             }
         }
 
-        public void getValue(out List<JsonNode> val)
+        public bool getValue(out List<JsonNode> val)
         {
             if (this.Type == EJType.Array)
+            {
                 val = (List<JsonNode>)this.value;
+                return true;
+            }
+            else
+            {
+                val = null;
+                return false;
+            }
+        }
+        public bool getValue(out string val)
+        {
+            if (this.Type == EJType.String)
+            {
+                val = (string)this.value;
+                return true;
+            }
+            else
+            {
+                val = null;
+                return false;
+            }
+        }
+        public bool getValue(out double val)
+        {
+            if (this.Type == EJType.Number)
+            {
+                val = (double)this.value;
+                return true;
+            }
+            else
+            {
+                val = 0;
+                return false;
+            }
+        }
+        public bool getValue(out Dictionary<string, JsonNode> val)
+        {
+            if (this.Type == EJType.Object)
+            {
+                val = this.value == null ? null : (Dictionary<string, JsonNode>)this.value;
+                return true;
+            }
+            else
+            {
+                val = null;
+                return false;
+            }
+        }
+        public bool getValue(out bool val)
+        {
+            if (this.Type == EJType.Boolean)
+            {
+                val = (bool)this.value;
+                return true;
+            }
+            else
+            {
+                val = false;
+                return false;
+            }
+        }
+
+        public List<JsonNode> getValue_Array()
+        {
+            if (this.Type == EJType.Array)
+                return (List<JsonNode>)this.value;
             else
                 throw new TypeAccessException("JsonNode type != Type.Array");
         }
-        public void getValue(out string val)
+        public string getValue_String()
         {
             if (this.Type == EJType.String)
-                val = (string)this.value;
+                return (string)this.value;
             else
                 throw new TypeAccessException("JsonNode type != Type.String");
         }
-        public void getValue(out double val)
+        public double getValue_Number()
         {
             if (this.Type == EJType.Number)
-                val = (double)this.value;
+                return (double)this.value;
             else
                 throw new TypeAccessException("JsonNode type != Type.Number");
         }
-        public void getValue(out Dictionary<string, JsonNode> val)
+        public Dictionary<string, JsonNode> getValue_Object()
         {
             if (this.Type == EJType.Object)
-                val = this.value == null ? null : (Dictionary<string, JsonNode>)this.value;
+                return this.value == null ? null : (Dictionary<string, JsonNode>)this.value;
             else
                 throw new TypeAccessException("JsonNode type != Type.Object");
         }
-        public void getValue(out bool val)
+        public bool getValue_Boolean()
         {
             if (this.Type == EJType.Boolean)
-                val = (bool)this.value;
+                return (bool)this.value;
             else
                 throw new TypeAccessException("JsonNode type != Type.Boolean");
         }
@@ -451,6 +517,12 @@ namespace asapJson
                         case '"':
                             sb.Append('"');
                             break;
+                        case '\'':
+                            sb.Append('\'');
+                            break;
+                        case '\\':
+                            sb.Append('\\');
+                            break;
                         case '/':
                             sb.Append('/');
                             break;
@@ -468,6 +540,15 @@ namespace asapJson
                             break;
                         case 't':
                             sb.Append("\t");
+                            break;
+                        case 'u':
+                            string encoded = "";
+                            sr.Read();
+                            encoded += (char)sr.Read();
+                            encoded += (char)sr.Read();
+                            encoded += (char)sr.Read();
+                            encoded += (char)sr.Peek();
+                            sb.Append((char)int.Parse(encoded, System.Globalization.NumberStyles.HexNumber));
                             break;
                     }
                     escape = false;
@@ -502,6 +583,7 @@ namespace asapJson
             int i;
             if (sr.Peek() == '-')
                 sb.Append('-');
+            
             bool isFrontNumber = true;
             while ((i = sr.Peek()) >= 0)
             {
@@ -655,32 +737,43 @@ namespace asapJson
                         var sb = new StringBuilder();
                         foreach (var it in obj)
                         {
-                            switch (it)
+                            if (it < 128)
                             {
-                                default:
-                                    sb.Append(it);
-                                    break;
-                                case '"':
-                                    sb.Append("\\\"");
-                                    break;
-                                //case '/':
-                                //    sb.Append("\\/");
-                                //    break;
-                                case '\b':
-                                    sb.Append("\\b");
-                                    break;
-                                case '\f':
-                                    sb.Append("\\f");
-                                    break;
-                                case '\n':
-                                    sb.Append("\\n");
-                                    break;
-                                case '\r':
-                                    sb.Append("\\r");
-                                    break;
-                                case '\t':
-                                    sb.Append("\\t");
-                                    break;
+                                switch (it)
+                                {
+                                    default:
+                                        sb.Append(it);
+                                        break;
+                                    case '"':
+                                        sb.Append("\\\"");
+                                        break;
+                                    case '\'':
+                                        sb.Append("\\'");
+                                        break;
+                                    case '/':
+                                        sb.Append("\\/");
+                                        break;
+                                    case '\b':
+                                        sb.Append("\\b");
+                                        break;
+                                    case '\f':
+                                        sb.Append("\\f");
+                                        break;
+                                    case '\n':
+                                        sb.Append("\\n");
+                                        break;
+                                    case '\r':
+                                        sb.Append("\\r");
+                                        break;
+                                    case '\t':
+                                        sb.Append("\\t");
+                                        break;
+
+                                }
+                            }
+                            else
+                            {
+                                sb.Append("\\u" + ((int)it).ToString("x4"));
                             }
                         }
                         sw.Write(sb.ToString());
