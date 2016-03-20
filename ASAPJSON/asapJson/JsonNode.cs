@@ -64,13 +64,14 @@ namespace asapJson
             {
                 Type = EJType.Object;
                 value = null;
-                System.IO.MemoryStream memStream = new System.IO.MemoryStream();
-                System.IO.StreamWriter sw = new System.IO.StreamWriter(memStream);
-                sw.Write(input);
-                sw.Flush();
-                memStream.Seek(0, System.IO.SeekOrigin.Begin);
-                read(new System.IO.StreamReader(memStream));
-                memStream.Close();
+                using (System.IO.MemoryStream memStream = new System.IO.MemoryStream())
+                {
+                    System.IO.StreamWriter sw = new System.IO.StreamWriter(memStream);
+                    sw.Write(input);
+                    sw.Flush();
+                    memStream.Seek(0, System.IO.SeekOrigin.Begin);
+                    read(new System.IO.StreamReader(memStream));
+                }
             }
             else
             {
@@ -787,15 +788,15 @@ namespace asapJson
 
         public override string ToString()
         {
-            System.IO.MemoryStream memStream = new System.IO.MemoryStream();
-            System.IO.StreamWriter sw = new System.IO.StreamWriter(memStream);
-            this.print(sw);
-            sw.Flush();
-            memStream.Seek(0, System.IO.SeekOrigin.Begin);
-            string s = new System.IO.StreamReader(memStream).ReadToEnd();
-            memStream.Close();
-
-            return s;
+            using (System.IO.MemoryStream memStream = new System.IO.MemoryStream())
+            {
+                System.IO.StreamWriter sw = new System.IO.StreamWriter(memStream);
+                this.print(sw);
+                sw.Flush();
+                memStream.Seek(0, System.IO.SeekOrigin.Begin);
+                string s = new System.IO.StreamReader(memStream).ReadToEnd();
+                return s;
+            }
         }
     }
 }
