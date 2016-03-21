@@ -591,14 +591,10 @@ namespace asapJson
                 char c = (char)i;
                 if (isFrontNumber)
                 {
-                    if (c == '0' && sb.Length == 0)
+                    if (c >= '0' && c <= '9')
                     {
-                        sb.Append(c);
-                        sb.Append('.');
-                        isFrontNumber = false;
-                    }
-                    else if (c >= '0' && c <= '9')
-                    {
+                        if(sb.Length > 0 && sb[0] == '0')
+                            throw new Exception("Parsing Object failed: Expected '.', got '" + c + "', Note: ASAP-JSON is not capable to parse eg. 0.1234e10");
                         sb.Append(c);
                     }
                     else if (c == '.')
@@ -619,7 +615,7 @@ namespace asapJson
                     }
                     else if (c == 'e' || c == 'E' || c == '+' || c == '-')
                     {
-                        throw new Exception("Parsing Object failed: Expected DIGIT, got '" + c + "', Note: ASAP-JSON is not able to parse eg. 0.1234e10");
+                        throw new Exception("Parsing Object failed: Expected DIGIT, got '" + c + "', Note: ASAP-JSON is not capable to parse eg. 0.1234e10");
                     }
                     else
                     {
