@@ -1,4 +1,4 @@
-﻿/*
+/*
 The MIT License (MIT)
 
 Copyright (c) 2016 Marco Silipo (X39)
@@ -70,7 +70,7 @@ namespace asapJson
                     sw.Write(input);
                     sw.Flush();
                     memStream.Seek(0, System.IO.SeekOrigin.Begin);
-                    read(new System.IO.StreamReader(memStream));
+                    this.Read(new System.IO.StreamReader(memStream));
                 }
             }
             else
@@ -93,10 +93,10 @@ namespace asapJson
         {
             Type = EJType.Object;
             value = null;
-            read(input);
+            this.Read(input);
         }
 
-        public JsonNode getByPath(string path, char delimeter = '/', bool createIfNonExisting = false)
+        public JsonNode GetByPath(string path, char delimeter = '/', bool createIfNonExisting = false)
         {
             var pathArgs = path.Split(delimeter);
             JsonNode curNode = this;
@@ -107,11 +107,11 @@ namespace asapJson
                 if (curNode.Type == EJType.Object)
                 {
                     Dictionary<string, JsonNode> val;
-                    curNode.getValue(out val);
+                    curNode.GetValue(out val);
                     if (val == null)
                     {
                         val = new Dictionary<string, JsonNode>();
-                        curNode.setValue(val);
+                        curNode.SetValue(val);
                     }
                     if (!val.TryGetValue(next, out curNode))
                     {
@@ -133,13 +133,14 @@ namespace asapJson
             }
             return curNode;
         }
-        public void setAtPath(JsonNode node, string path, char delimeter = '/')
+        public void SetAtPath(JsonNode node, string path, char delimeter = '/')
         {
             int index = path.LastIndexOf(delimeter);
             JsonNode lastNode;
             if (index > 0)
             {
-                lastNode = getByPath(path.Substring(0, index), delimeter, true); ;
+                lastNode = this.GetByPath(path.Substring(0, index), delimeter, true);
+                ;
             }
             else
             {
@@ -149,11 +150,11 @@ namespace asapJson
             if (lastNode.Type == EJType.Object)
             {
                 Dictionary<string, JsonNode> val;
-                lastNode.getValue(out val);
+                lastNode.GetValue(out val);
                 if (val == null)
                 {
                     val = new Dictionary<string, JsonNode>();
-                    lastNode.setValue(val);
+                    lastNode.SetValue(val);
                 }
                 if (index > 0)
                 {
@@ -170,7 +171,7 @@ namespace asapJson
             }
         }
 
-        public bool getValue(out List<JsonNode> val)
+        public bool GetValue(out List<JsonNode> val)
         {
             if (this.Type == EJType.Array)
             {
@@ -183,7 +184,7 @@ namespace asapJson
                 return false;
             }
         }
-        public bool getValue(out string val)
+        public bool GetValue(out string val)
         {
             if (this.Type == EJType.String)
             {
@@ -196,7 +197,7 @@ namespace asapJson
                 return false;
             }
         }
-        public bool getValue(out double val)
+        public bool GetValue(out double val)
         {
             if (this.Type == EJType.Number)
             {
@@ -209,7 +210,7 @@ namespace asapJson
                 return false;
             }
         }
-        public bool getValue(out Dictionary<string, JsonNode> val)
+        public bool GetValue(out Dictionary<string, JsonNode> val)
         {
             if (this.Type == EJType.Object)
             {
@@ -222,7 +223,7 @@ namespace asapJson
                 return false;
             }
         }
-        public bool getValue(out bool val)
+        public bool GetValue(out bool val)
         {
             if (this.Type == EJType.Boolean)
             {
@@ -236,35 +237,35 @@ namespace asapJson
             }
         }
 
-        public List<JsonNode> getValue_Array()
+        public List<JsonNode> GetValue_Array()
         {
             if (this.Type == EJType.Array)
                 return (List<JsonNode>)this.value;
             else
                 throw new TypeAccessException("JsonNode type != Type.Array");
         }
-        public string getValue_String()
+        public string GetValue_String()
         {
             if (this.Type == EJType.String)
                 return (string)this.value;
             else
                 throw new TypeAccessException("JsonNode type != Type.String");
         }
-        public double getValue_Number()
+        public double GetValue_Number()
         {
             if (this.Type == EJType.Number)
                 return (double)this.value;
             else
                 throw new TypeAccessException("JsonNode type != Type.Number");
         }
-        public Dictionary<string, JsonNode> getValue_Object()
+        public Dictionary<string, JsonNode> GetValue_Object()
         {
             if (this.Type == EJType.Object)
                 return this.value == null ? null : (Dictionary<string, JsonNode>)this.value;
             else
                 throw new TypeAccessException("JsonNode type != Type.Object");
         }
-        public bool getValue_Boolean()
+        public bool GetValue_Boolean()
         {
             if (this.Type == EJType.Boolean)
                 return (bool)this.value;
@@ -272,32 +273,32 @@ namespace asapJson
                 throw new TypeAccessException("JsonNode type != Type.Boolean");
         }
 
-        public void setValue(List<JsonNode> val)
+        public void SetValue(List<JsonNode> val)
         {
             this.value = (object)val;
             this.Type = EJType.Array;
         }
-        public void setValue(string val)
+        public void SetValue(string val)
         {
             this.value = (object)val;
             this.Type = EJType.String;
         }
-        public void setValue(double val)
+        public void SetValue(double val)
         {
             this.value = (object)val;
             this.Type = EJType.Number;
         }
-        public void setValue(Dictionary<string, JsonNode> val)
+        public void SetValue(Dictionary<string, JsonNode> val)
         {
             this.value = (object)val;
             this.Type = EJType.Object;
         }
-        public void setValue(bool val)
+        public void SetValue(bool val)
         {
             this.value = (object)val;
             this.Type = EJType.Boolean;
         }
-        public void setValue()
+        public void SetValue()
         {
             this.value = null;
             this.Type = EJType.Object;
@@ -313,7 +314,7 @@ namespace asapJson
          * It did not made things more simple ... but well ...
          * was an experiment :)
          */
-        public void read(System.IO.StreamReader sr)
+        public void Read(System.IO.StreamReader sr)
         {
             switch (sr.Peek())
             {
@@ -331,16 +332,16 @@ namespace asapJson
                     next = sr.Read();
                     if (next != 'l' && next != 'L')
                         throw new Exception("Parsing Object failed: Expected 'l' or 'L', got '" + (char)next + '\'');
-                    this.setValue();
+                    this.SetValue();
                     break;
                 case '{':
-                    readObject(sr);
+                    this.ReadObject(sr);
                     break;
                 case '[':
-                    readArray(sr);
+                    this.ReadArray(sr);
                     break;
                 case '"':
-                    readString(sr);
+                    this.ReadString(sr);
                     break;
                 case '-':
                 case '0':
@@ -353,17 +354,17 @@ namespace asapJson
                 case '7':
                 case '8':
                 case '9':
-                    readNumber(sr);
+                    this.ReadNumber(sr);
                     break;
                 case 't':
                 case 'f':
                 case 'T':
                 case 'F':
-                    readBoolean(sr);
+                    this.ReadBoolean(sr);
                     break;
             }
         }
-        private void readObject(System.IO.StreamReader sr)
+        private void ReadObject(System.IO.StreamReader sr)
         {
             int i;
             bool isOpen = false;
@@ -373,7 +374,7 @@ namespace asapJson
             string label = "";
             char lastChar = '\0';
             Dictionary<string, JsonNode> dict = new Dictionary<string, JsonNode>();
-            this.setValue(dict);
+            this.SetValue(dict);
             while ((i = sr.Peek()) >= 0)
             {
                 char c = (char)i;
@@ -406,7 +407,7 @@ namespace asapJson
                             else if (getNextValue)
                             {//Next value of current label needs to get parsed
                                 JsonNode child = new JsonNode();
-                                child.read(sr);
+                                child.Read(sr);
                                 dict.Add(label, child);
                                 getNextKeySet = true;
                                 lastChar = '\0';
@@ -423,7 +424,7 @@ namespace asapJson
                         {//No label yet found --> get label of current item
                             if (c != '"')
                                 throw new Exception("Parsing Object failed: Expected '\"', got '" + c + '\'');
-                            label = parseStringFromEncoded(sr);
+                            label = ParseStringFromEncoded(sr);
                             hasLabel = true;
                             lastChar = '"';
                             continue;
@@ -442,11 +443,11 @@ namespace asapJson
             if (lastChar != '}')
                 throw new Exception("Parsing Object failed: Expected '}', got '" + lastChar + '\'');
         }
-        private void readArray(System.IO.StreamReader sr)
+        private void ReadArray(System.IO.StreamReader sr)
         {
             int i;
             List<JsonNode> array = new List<JsonNode>();
-            this.setValue(array);
+            this.SetValue(array);
             bool isOpen = false;
             bool allowNext = true;
             char lastChar = '\0';
@@ -466,7 +467,7 @@ namespace asapJson
                         else if (allowNext)
                         {
                             JsonNode node = new JsonNode();
-                            node.read(sr);
+                            node.Read(sr);
                             array.Add(node);
                             allowNext = false;
                             lastChar = '\0';
@@ -493,11 +494,11 @@ namespace asapJson
                 lastChar = c;
             }
         }
-        private void readString(System.IO.StreamReader sr)
+        private void ReadString(System.IO.StreamReader sr)
         {
-            this.setValue(parseStringFromEncoded(sr));
+            this.SetValue(ParseStringFromEncoded(sr));
         }
-        private static string parseStringFromEncoded(System.IO.StreamReader sr)
+        private static string ParseStringFromEncoded(System.IO.StreamReader sr)
         {
             StringBuilder sb = new StringBuilder();
             int i;
@@ -578,13 +579,13 @@ namespace asapJson
                 throw new Exception("Parsing Object failed: Expected '\"', got '" + lastChar + '\'');
             return sb.ToString();
         }
-        private void readNumber(System.IO.StreamReader sr)
+        private void ReadNumber(System.IO.StreamReader sr)
         {
             StringBuilder sb = new StringBuilder();
             int i;
             if (sr.Peek() == '-')
                 sb.Append('-');
-            
+
             bool isFrontNumber = true;
             while ((i = sr.Peek()) >= 0)
             {
@@ -593,7 +594,7 @@ namespace asapJson
                 {
                     if (c >= '0' && c <= '9')
                     {
-                        if(sb.Length > 0 && sb[0] == '0')
+                        if (sb.Length > 0 && sb[0] == '0')
                             throw new Exception("Parsing Object failed: Expected '.', got '" + c + "', Note: ASAP-JSON is not capable to parse eg. 0.1234e10");
                         sb.Append(c);
                     }
@@ -624,9 +625,9 @@ namespace asapJson
                 }
                 sr.Read();
             }
-            this.setValue(double.Parse(sb.ToString(), System.Globalization.CultureInfo.InvariantCulture));
+            this.SetValue(double.Parse(sb.ToString(), System.Globalization.CultureInfo.InvariantCulture));
         }
-        private void readBoolean(System.IO.StreamReader sr)
+        private void ReadBoolean(System.IO.StreamReader sr)
         {
             int i = sr.Peek();
             if (i == 't' || i == 'T')
@@ -641,7 +642,7 @@ namespace asapJson
                 i = sr.Read();
                 if (i != 'e' && i != 'E')
                     throw new Exception("Parsing Object failed: Expected 'e' or 'E', got '" + (char)i + '\'');
-                this.setValue(true);
+                this.SetValue(true);
             }
             else if (i == 'f' | i == 'F')
             {
@@ -658,12 +659,20 @@ namespace asapJson
                 i = sr.Read();
                 if (i != 'e' && i != 'E')
                     throw new Exception("Parsing Object failed: Expected 'e' or 'E', got '" + (char)i + '\'');
-                this.setValue(false);
+                this.SetValue(false);
             }
         }
         #endregion
 
-        public void print(System.IO.StreamWriter sw)
+        public void Print(System.IO.StreamWriter sw)
+        {
+            Print_handle(sw, false, 0);
+        }
+        public void PrintBeauty(System.IO.StreamWriter sw)
+        {
+            Print_handle(sw, true, 0);
+        }
+        private void Print_handle(System.IO.StreamWriter sw, bool beautify, int tablength)
         {
             switch (this.Type)
             {
@@ -671,15 +680,29 @@ namespace asapJson
                     {
                         List<JsonNode> obj;
                         bool flag = false;
-                        this.getValue(out obj);
+                        this.GetValue(out obj);
+                        if (beautify)
+                        {
+                            sw.Write('\r');
+                            sw.Write('\n');
+                            sw.Write(new string('\t', tablength));
+                        }
                         sw.Write('[');
                         foreach (var it in obj)
                         {
                             if (flag)
+                            {
                                 sw.Write(',');
+                                if (beautify)
+                                {
+                                    sw.Write('\r');
+                                    sw.Write('\n');
+                                    sw.Write(new string('\t', tablength + 1));
+                                }
+                            }
                             else
                                 flag = true;
-                            it.print(sw);
+                            it.Print_handle(sw, beautify, tablength + 1);
                         }
                         sw.Write(']');
                     }
@@ -687,14 +710,14 @@ namespace asapJson
                 case EJType.Boolean:
                     {
                         bool obj;
-                        this.getValue(out obj);
+                        this.GetValue(out obj);
                         sw.Write(obj ? "true" : "false");
                     }
                     break;
                 case EJType.Number:
                     {
                         double obj;
-                        this.getValue(out obj);
+                        this.GetValue(out obj);
                         sw.Write(obj.ToString(System.Globalization.CultureInfo.InvariantCulture));
                     }
                     break;
@@ -702,25 +725,39 @@ namespace asapJson
                     {
                         Dictionary<string, JsonNode> obj;
                         bool flag = false;
-                        this.getValue(out obj);
+                        this.GetValue(out obj);
                         if (obj == null)
                         {
                             sw.Write("null");
                         }
                         else
                         {
+                            if (beautify)
+                            {
+                                sw.Write('\r');
+                                sw.Write('\n');
+                                sw.Write(new string('\t', tablength));
+                            }
                             sw.Write('{');
                             foreach (var it in obj)
                             {
                                 if (flag)
+                                {
                                     sw.Write(',');
+                                    if (beautify)
+                                    {
+                                        sw.Write('\r');
+                                        sw.Write('\n');
+                                        sw.Write(new string('\t', tablength + 1));
+                                    }
+                                }
                                 else
                                     flag = true;
                                 sw.Write('"');
                                 sw.Write(it.Key);
                                 sw.Write('"');
                                 sw.Write(':');
-                                it.Value.print(sw);
+                                it.Value.Print_handle(sw, beautify, tablength + 1);
                             }
                             sw.Write('}');
                         }
@@ -729,7 +766,7 @@ namespace asapJson
                 case EJType.String:
                     {
                         string obj;
-                        this.getValue(out obj);
+                        this.GetValue(out obj);
                         sw.Write('"');
                         var sb = new StringBuilder();
                         foreach (var it in obj)
@@ -787,7 +824,7 @@ namespace asapJson
             using (System.IO.MemoryStream memStream = new System.IO.MemoryStream())
             {
                 System.IO.StreamWriter sw = new System.IO.StreamWriter(memStream);
-                this.print(sw);
+                this.Print(sw);
                 sw.Flush();
                 memStream.Seek(0, System.IO.SeekOrigin.Begin);
                 string s = new System.IO.StreamReader(memStream).ReadToEnd();
