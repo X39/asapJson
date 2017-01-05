@@ -584,7 +584,10 @@ namespace asapJson
             StringBuilder sb = new StringBuilder();
             int i;
             if (sr.Peek() == '-')
+            {
                 sb.Append('-');
+                sr.Read();
+            }
 
             bool isFrontNumber = true;
             while ((i = sr.Peek()) >= 0)
